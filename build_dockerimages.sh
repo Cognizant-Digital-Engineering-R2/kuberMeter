@@ -1,6 +1,6 @@
 #!/bin/bash -e
-docker system prune
+docker system prune -a
 
-docker build --tag="kubernautslabs/jmeter-base:latest" -f jmeter-base.dockerfile .
-docker build --tag="kubernautslabs/jmeter-master:latest" -f jmeter-master.dockerfile .
-docker build --tag="kubernautslabs/jmeter-slave:latest" -f jmeter-slave.dockerfile .
+docker build --tag="kubermeter/jmeter-base:latest" -f jmeter-base.dockerfile .
+docker build --tag="kubermeter/jmeter-master:latest" -f jmeter-master.dockerfile .
+docker build --tag="kubermeter/jmeter-slave:latest" -f jmeter-slave.dockerfile .
