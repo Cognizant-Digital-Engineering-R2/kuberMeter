@@ -1,10 +1,11 @@
-= JMeter Cluster Support for Kubernetes
+image::./kuberMeter_logo_text.svg[Static,300]
+[.lead]
+__JMeter Cluster Support for Kubernetes__
 
 == Prerequisites
 
 Kubernetes > 1.16
 
-[.line-through]#OpenShift version > 3.5#
 Implementing on Google Kubernete Engine (GKE) with `dev_GKE` branch.
 
 == Quick Start Guide
