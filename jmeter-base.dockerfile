@@ -1,8 +1,8 @@
 FROM openjdk:8-jdk-slim
 LABEL maintainer="hao.shen@cognizant.com"
-		
+
 ARG JMETER_VERSION=5.4.1
-		
+
 RUN apt-get clean && \
 apt-get update && \
 apt-get -qy install \
