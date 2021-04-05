@@ -78,31 +78,16 @@ echo
 
 echo "Applying Jmeter slave replicas and service"
 
-echo
-
-kubectl apply -n $tenant -f $script_dir/jmeter_slaves_deploy.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_slaves_svc.yaml
+kubectl apply -n $tenant -f $working_dir/jmeter_slaves.yaml
 
 echo "Applying Jmeter Master"
 
-kubectl apply -n $tenant -f $script_dir/jmeter_master_configmap.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_master_deploy.yaml
-
+kubectl apply -n $tenant -f $working_dir/jmeter_master.yaml
 
 echo "Applying Influxdb and the service"
 
-kubectl apply -n $tenant -f $script_dir/jmeter_influxdb_configmap.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_influxdb_deploy.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_influxdb_svc.yaml
+kubectl apply -n $tenant -f $working_dir/jmeter_influxdb.yaml
 
 echo "Applying Grafana Deployment"
 
-kubectl apply -n $tenant -f $script_dir/jmeter_grafana_deploy.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_grafana_reporter.yaml
-
-kubectl apply -n $tenant -f $script_dir/jmeter_grafana_svc.yaml
+kubectl apply -n $tenant -f $working_dir/jmeter_grafana.yaml
