@@ -4,7 +4,7 @@ docker system prune -a
 # start a local Docker registry
 docker run -d -p 5000:5000 --name registry registry:2
 
-DOCKER_REGISTRY='localhost:5000'
+DOCKER_REGISTRY='127.0.0.1:5000'
 
 docker build --tag="$DOCKER_REGISTRY/kubermeter/jmeter-base:latest" -f jmeter-base.dockerfile .
 docker push $DOCKER_REGISTRY/kubermeter/jmeter-base:latest
