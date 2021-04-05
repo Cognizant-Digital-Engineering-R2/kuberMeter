@@ -95,11 +95,13 @@ properties_file="${properties_file%.*}"
 test_report_name="$4"
 
 
-
-# Assert test_plan_dir exsists on the local machine, and the jmx_file and properties_file are located at its surface level. 
+# Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, and the jmx_file and properties_file are located at its surface level. 
 if [ ! -d "$test_plan_dir" ]
 then
-  die "Directory $test_plan_dir does not exist! Use -h for help."
+  die "Directory '$test_plan_dir' does not exist! Use -h for help."
+elif [ $test_plan_dir_basename = $POD_TEST_PLAN_DIR ]
+  then
+  die "Directory name '$test_plan_dir_basename' coincide with the reserved name '$POD_TEST_PLAN_DIR'. Please changed it to another one."
 else
   if [ ! -f "$test_plan_dir/$jmx_file.jmx" ]
   then
@@ -109,6 +111,7 @@ else
     die "'$properties_file.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   fi
 fi
+
 
 # Get master pod details
 master_pod=`kubectl -n $tenant get po | grep jmeter-master | awk '{print $1}'`
@@ -125,7 +128,7 @@ then
   test_report_name=$new_test_report_name
 fi
 
-msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR ..."
+msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename ..."
 kubectl -n $tenant exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
 kubectl -n $tenant cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
 kubectl -n $tenant exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
@@ -136,7 +139,7 @@ slave_pods=(`kubectl get po -n $tenant | grep jmeter-slave | awk '{print $1}'`)
 
 for slave_pod in ${slave_pods[@]}
   do
-    msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR"
+    msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename"
     kubectl -n $tenant exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
     kubectl -n $tenant cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
     kubectl -n $tenant exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
