@@ -28,8 +28,3 @@ RUN cd /jmeter/apache-jmeter-$JMETER_VERSION/ && wget -q -O /tmp/JMeterPlugins-S
 ENV JMETER_HOME /jmeter/apache-jmeter-$JMETER_VERSION/
 		
 ENV PATH $JMETER_HOME/bin:$PATH
-
-# RUN  cd /tmp \
-# && mkdir /kubermeter \
-# && cd /kubermeter \
-# && mkdir /current_test_plan
