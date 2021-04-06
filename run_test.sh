@@ -80,19 +80,14 @@ parse_params() {
 parse_params "$@"
 setup_colors
 
-
-# Get namesapce variable stored in tenant_export.
-tenant=$2
-
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
+JMX_FILE='test'
+PROPERTIES_FILE='test'
 test_plan_dir="$1"
 test_plan_dir_basename=`basename $test_plan_dir`
-jmx_file='test'
-properties_file='test'
+jmeter_namespace=$2
 test_report_name="$3"
-
-
 
 
 # Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, and the jmx_file and properties_file are located at its surface level. 
@@ -103,23 +98,21 @@ elif [ $test_plan_dir_basename = $POD_TEST_PLAN_DIR ]
   then
   die "Directory name '$test_plan_dir_basename' coincide with the reserved name '$POD_TEST_PLAN_DIR'. Please changed it to another one."
 else
-  if [ ! -f "$test_plan_dir/$jmx_file.jmx" ]
+  if [ ! -f "$test_plan_dir/$JMX_FILE.jmx" ]
   then
-    die "'$jmx_file.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
-  elif [ ! -f "$test_plan_dir/$properties_file.properties" ]
+    die "'$JMX_FILE.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+  elif [ ! -f "$test_plan_dir/$PROPERTIES_FILE.properties" ]
   then
-    die "'$properties_file.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+    die "'$PROPERTIES_FILE.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   fi
 fi
 
 
-exit
-
 # Get master pod details
-master_pod=`kubectl -n $tenant get po | grep jmeter-master | awk '{print $1}'`
+master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
 
 msg "Checking if test results of $test_report_name already exists in the jmeter-master pod..."
-report_jtl_or_dir_count=`kubectl -n $tenant exec -ti $master_pod -- find $POD_KUBERMETER_DIR/ -maxdepth 1 \
+report_jtl_or_dir_count=`kubectl -n $jmeter_namespace exec -ti $master_pod -- find $POD_KUBERMETER_DIR/ -maxdepth 1 \
   \( -type d -name ${test_report_name} -or -name ${test_report_name}.jtl \) | wc -l | xargs`
 
 if [ $((report_jtl_or_dir_count)) -lt 0 ]
@@ -131,32 +124,32 @@ then
 fi
 
 msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename ..."
-kubectl -n $tenant exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
-kubectl -n $tenant cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
-kubectl -n $tenant exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+kubectl -n $jmeter_namespace exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
+kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
+kubectl -n $jmeter_namespace exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
 
 
 # Get slave pods details
-slave_pods=(`kubectl get po -n $tenant | grep jmeter-slave | awk '{print $1}'`)
+slave_pods=(`kubectl get po -n $jmeter_namespace | grep jmeter-slave | awk '{print $1}'`)
 
 for slave_pod in ${slave_pods[@]}
   do
     msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename"
-    kubectl -n $tenant exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
-    kubectl -n $tenant cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
-    kubectl -n $tenant exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+    kubectl -n $jmeter_namespace exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
+    kubectl -n $jmeter_namespace cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
+    kubectl -n $jmeter_namespace exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
 done
 
 
 msg "Starting the JMeter test..."
-kubectl exec -ti -n $tenant $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $test_plan_dir $jmx_file.jmx $properties_file.properties $test_report_name.jtl
+kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $test_plan_dir $JMX_FILE.jmx $PROPERTIES_FILE.properties $test_report_name.jtl
 
 msg "Generating the JMeter HTML report..."
-kubectl exec -ti -n $tenant $master_pod -- /bin/bash /generate_report $POD_KUBERMETER_DIR/$test_report_name.jtl $POD_KUBERMETER_DIR/$test_report_name
+kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /generate_report $POD_KUBERMETER_DIR/$test_report_name.jtl $POD_KUBERMETER_DIR/$test_report_name
 
 msg "Pulling the test report and log from the master pod..."
-kubectl -n $tenant cp $master_pod:$POD_KUBERMETER_DIR/$test_report_name $test_report_name
-kubectl -n $tenant cp $master_pod:$POD_KUBERMETER_DIR/$test_report_name.jtl $test_report_name/$test_report_name.jtl
+kubectl -n $jmeter_namespace cp $master_pod:$POD_KUBERMETER_DIR/$test_report_name $test_report_name
+kubectl -n $jmeter_namespace cp $master_pod:$POD_KUBERMETER_DIR/$test_report_name.jtl $test_report_name/$test_report_name.jtl
 
 msg "Packing the test report and log file into ${test_report_name}.zip..."
 zip -qr $test_report_name.zip $test_report_name
