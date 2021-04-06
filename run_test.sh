@@ -21,7 +21,7 @@ To launch Jmeter tests directly from the current terminal without accessing the 
 It requires that you supply the test plan directory (`test_plan_dir`), which must contain `test.jmx` and `test.properties` at surface level.
 The directory may contain additional supporting files, such csv, groovy or sql files.
 The entire directory will be copied into the jmeter master and slave pods within the namespace `jmeter_namespace`
-After execution, the jmeter test log file (jtl) and a HTML report will be pulled from the jmeter-master pod and packaged into a zip file using test_report_name.
+After execution, the jmeter test log file (jtl) and an HTML report will be pulled from the jmeter-master pod, and then packaged into a zip file using test_report_name.
 
 Available options:
 

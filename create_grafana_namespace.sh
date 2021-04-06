@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-#Create a  Jmeter namespaces on an existing kuberntes cluster
-#Started On January 23, 2018
+# Create a Grafana namespace on an existing kuberntes cluster
 
 working_dir=`pwd`
 GRAFANA_NAMESPACE='kubermeter-grafana'
@@ -16,29 +15,17 @@ fi
 
 kubectl version --short
 
-echo "Current list of namespaces on the kubernetes cluster:"
-
-echo
-
-kubectl get namespaces | grep -v NAME | awk '{print $1}'
-
-echo
-
 #Check If namespace exists
 
 kubectl get namespace $GRAFANA_NAMESPACE > /dev/null 2>&1
 
-exit
-
 if [ $? -eq 0 ]
 then
-  echo "Namespace $GRAFANA_NAMESPACE already exists, please select a unique name"
-  echo "Current list of namespaces on the kubernetes cluster"
-  sleep 2
-
- kubectl get namespaces | grep -v NAME | awk '{print $1}'
+  echo "Namespace '$GRAFANA_NAMESPACE' already exists. You don't need to create another one."
   exit 1
 fi
+
+exit
 
 echo
 echo "Creating Namespace: $GRAFANA_NAMESPACE"
@@ -63,4 +50,5 @@ echo
 
 kubectl get -n $GRAFANA_NAMESPACE all
 
-echo namespace = $GRAFANA_NAMESPACE > $working_dir/tenant_export
+# Export to GRAFANA_NAMESPACE file
+$GRAFANA_NAMESPACE > $working_dir/GRAFANA_NAMESPACE
