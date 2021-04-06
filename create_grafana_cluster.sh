@@ -55,23 +55,13 @@ echo "Namspace $tenant has been created"
 
 echo
 
-echo "Creating Jmeter slave nodes"
+echo "Creating Influxdb and service"
 
-nodes=`kubectl get no | egrep -v "master|NAME" | wc -l`
+kubectl create -n $tenant -f $working_dir/jmeter_influxdb.yaml
 
-echo
+echo "Creating Grafana Deployment"
 
-echo "Number of worker nodes on this cluster is " $nodes
-
-echo
-
-echo "Creating Jmeter slave replicas and service"
-
-kubectl create -n $tenant -f $working_dir/jmeter_slaves.yaml
-
-echo "Creating Jmeter Master"
-
-kubectl create -n $tenant -f $working_dir/jmeter_master.yaml
+kubectl create -n $tenant -f $working_dir/jmeter_grafana.yaml
 
 echo "Printout Of the $tenant Objects"
 
