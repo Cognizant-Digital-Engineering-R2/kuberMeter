@@ -1,5 +1,6 @@
 FROM openjdk:8-jdk-slim
-LABEL maintainer="hao.shen@cognizant.com"
+LABEL maintainer.github='hao.shen@cognizant.com' \
+    maintainer.dockerhub='bluehao85@gmail.com'
 
 ARG JMETER_VERSION=5.4.1
 
@@ -28,7 +29,7 @@ ENV JMETER_HOME /jmeter/apache-jmeter-$JMETER_VERSION/
 		
 ENV PATH $JMETER_HOME/bin:$PATH
 
-RUN  cd /tmp \
-&& mkdir /kubermeter \
-&& cd /kubermeter \
-&& mkdir /current_test_plan
+# RUN  cd /tmp \
+# && mkdir /kubermeter \
+# && cd /kubermeter \
+# && mkdir /current_test_plan

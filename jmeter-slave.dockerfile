@@ -1,5 +1,6 @@
-FROM 127.0.0.1:5000/kubermeter/jmeter-base:latest
-LABEL maintainer="hao.shen@cognizant.com"
+FROM kubermeter/jmeter-base:latest
+LABEL maintainer.github='hao.shen@cognizant.com' \
+    maintainer.dockerhub='bluehao85@gmail.com'
 
 EXPOSE 1099 50000
 

@@ -1,16 +1,14 @@
 #!/bin/bash -e
-docker system prune -a
+# docker system prune -a
 
-# start a local Docker registry
-docker run -d -p 5000:5000 --name registry registry:2
+# Docker hub account hs888555 (bluehao85@gmail.com)
+$DOCKER_REGISTRY='hs888555'
 
-DOCKER_REGISTRY='127.0.0.1:5000'
+docker build --tag="kubermeter/jmeter-base:latest" -f jmeter-base.dockerfile .
 
-docker build --tag="$DOCKER_REGISTRY/kubermeter/jmeter-base:latest" -f jmeter-base.dockerfile .
-docker push $DOCKER_REGISTRY/kubermeter/jmeter-base:latest
+docker build --tag="hs888555/kubermeter-jmeter-master:latest" -f jmeter-master.dockerfile .
+docker push $DOCKER_REGISTRY/kubermeter-jmeter-master:latest
 
-docker build --tag="$DOCKER_REGISTRY/kubermeter/jmeter-master:latest" -f jmeter-master.dockerfile .
-docker push $DOCKER_REGISTRY/kubermeter/jmeter-master:latest
-
-docker build --tag="$DOCKER_REGISTRY/kubermeter/jmeter-slave:latest" -f jmeter-slave.dockerfile .
+docker build --tag="hs888555/kubermeter-jmeter-slave:latest" -f jmeter-slave.dockerfile .
 docker push $DOCKER_REGISTRY/kubermeter/jmeter-slave:latest
+s

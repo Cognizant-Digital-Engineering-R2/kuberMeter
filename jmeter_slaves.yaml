@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: jmslave
-        image: kubermeter/jmeter-master:latest
+        image: hs888555/kubermeter-jmeter-slave:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 1099
