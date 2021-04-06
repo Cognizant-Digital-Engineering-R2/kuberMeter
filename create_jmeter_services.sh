@@ -45,8 +45,6 @@ echo "Creating Namespace: $jmeter_namespace"
 
 kubectl create namespace $jmeter_namespace
 
-echo "Namspace $jmeter_namespace has been created"
-
 exit
 
 echo

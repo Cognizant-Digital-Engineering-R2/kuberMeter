@@ -19,8 +19,6 @@ echo "Creating Namespace: $GRAFANA_NAMESPACE..."
 
 kubectl create namespace $GRAFANA_NAMESPACE
 
-echo "Namspace $GRAFANA_NAMESPACE has been created."
-
 echo
 
 echo "Creating Influxdb and service..."
