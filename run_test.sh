@@ -11,17 +11,16 @@ usage() {
 
 Usage: 
 
-$(basename "${BASH_SOURCE[0]}") [-h] test_plan_dir jmx_file properties_file test_report_name
+$(basename "${BASH_SOURCE[0]}") [-h] test_plan_dir jmeter_namespace test_report_name
 
-test_plan_dir: The test plan directory.
-jmx_file: The jmeter test file name. Must be at the surface level in the test plan directory.
-properties_file: The properties file name to be used with the jmx. Must be at the surface level in the test plan directory.
+test_plan_dir: The test plan directory, which must contain test.jmx and test.properties at surface level.
+jmeter_namespace: Namespace of the jmeter cluster in which the test will be run.
 test_report_name: Name for the generated JMeter test report and output log. Must be at the surface level in the test plan directory.
 
 To launch Jmeter tests directly from the current terminal without accessing the jmeter-master pod.
-It requires that you supply the test plan directory (test_plan_dir), which contains jmx_file and properties_file at the surface level.
-The directory may contain additional supporting files, such as propeties and csv files.
-The entire directory will be copied into the jmeter_master pod, and only the jmx file specified as properties_file at the surface will be executed.
+It requires that you supply the test plan directory (`test_plan_dir`), which must contain `test.jmx` and `test.properties` at surface level.
+The directory may contain additional supporting files, such csv, groovy or sql files.
+The entire directory will be copied into the jmeter master and slave pods within the namespace `jmeter_namespace`
 After execution, the jmeter test log file (jtl) and a HTML report will be pulled from the jmeter-master pod and packaged into a zip file using test_report_name.
 
 Available options:
@@ -73,13 +72,19 @@ parse_params() {
   args=("$@")
 
   # check required params and arguments
-  [[ ${#args[@]} -lt 4 ]] && die "Arguments incomplete. Use -h for help."
+  [[ ${#args[@]} -lt 3 ]] && die "Arguments incomplete. Use -h for help."
 
   return 0
 }
 
 parse_params "$@"
 setup_colors
+
+echo $1
+echo $2
+echo $3
+
+exit
 
 # Get namesapce variable stored in tenant_export.
 tenant=`awk '{print $NF}' "$script_dir/tenant_export"`
