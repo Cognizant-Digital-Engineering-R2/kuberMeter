@@ -3,17 +3,7 @@
 #Started On January 23, 2018
 
 working_dir=`pwd`
-
-echo "checking if kubectl is present"
-
-if ! hash kubectl 2>/dev/null
-then
-    echo "'kubectl' was not found in PATH"
-    echo "Kindly ensure that you can acces an existing kubernetes cluster via kubectl"
-    exit
-fi
-
-kubectl version --short
+JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
 
 echo "Current list of namespaces on the kubernetes cluster:"
 
@@ -69,7 +59,7 @@ echo "Creating Jmeter slave replicas and service"
 
 kubectl create -n $tenant -f $working_dir/jmeter_slaves.yaml
 
-echo "Creating Jmeter Master"
+echo "Creating Jmeter master"
 
 kubectl create -n $tenant -f $working_dir/jmeter_master.yaml
 
