@@ -80,24 +80,19 @@ parse_params() {
 parse_params "$@"
 setup_colors
 
-echo $1
-echo $2
-echo $3
-
-exit
 
 # Get namesapce variable stored in tenant_export.
-tenant=`awk '{print $NF}' "$script_dir/tenant_export"`
+tenant=$2
 
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
 test_plan_dir="$1"
 test_plan_dir_basename=`basename $test_plan_dir`
-jmx_file=`basename $2`
-jmx_file="${jmx_file%.*}"
-properties_file=`basename $3`
-properties_file="${properties_file%.*}"
-test_report_name="$4"
+jmx_file='test'
+properties_file='test'
+test_report_name="$3"
+
+
 
 
 # Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, and the jmx_file and properties_file are located at its surface level. 
@@ -117,6 +112,8 @@ else
   fi
 fi
 
+
+exit
 
 # Get master pod details
 master_pod=`kubectl -n $tenant get po | grep jmeter-master | awk '{print $1}'`
