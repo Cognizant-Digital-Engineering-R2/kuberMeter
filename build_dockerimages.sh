@@ -8,4 +8,4 @@ docker build --tag="$DOCKER_REGISTRY/kubermeter-jmeter-master:latest" -f jmeter-
 docker push $DOCKER_REGISTRY/kubermeter-jmeter-master:latest
 
 docker build --tag="$DOCKER_REGISTRY/kubermeter-jmeter-slave:latest" -f jmeter-slave.dockerfile .
-docker push $DOCKER_REGISTRY/kubermeter/jmeter-slave:latest
+docker push $DOCKER_REGISTRY/kubermeter-jmeter-slave:latest
