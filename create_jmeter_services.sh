@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Create a new Jmeter namespace and resources on an existing kuberntes cluster
-#Started On January 23, 2018
 
 working_dir=`pwd`
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
@@ -9,20 +8,25 @@ echo "Current list of namespaces on the kubernetes cluster:"
 
 echo
 
-kubectl get namespaces | grep -v NAME | awk '{print $1}'
+kubectl get namespaces | grep -v NAME | awk "/$JMETER_NAMESPACE_PREFIX/{print $1}"
 
 echo
 
 echo -n "Create a new namespace for the JMeter resources: $JMETER_NAMESPACE_PREFIX"
 read ns_input
-echo -n "How many JMeter slaves do you want to use? "
-read slave_num
+
+
+while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]
+  do
+    echo "in while $slave_num"
+    echo -n "How many JMeter slaves do you want to use? (1-10): "
+    read slave_num
+done
 
 
 jmeter_namespace="$JMETER_NAMESPACE_PREFIX$ns_input"
-echo $jmeter_namespace
-echo $slave_num
 
+exit
 
 echo
 
@@ -30,13 +34,12 @@ echo
 
 kubectl get namespace $jmeter_namespace > /dev/null 2>&1
 
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ]; then
   echo "Namespace $jmeter_namespace already exists, please select a unique name"
   echo "Current list of namespaces on the kubernetes cluster"
   sleep 2
 
- kubectl get namespaces | grep -v NAME | awk '{print $1}'
+  kubectl get namespaces | grep -v NAME | awk '{print $1}'
   exit 1
 fi
 
@@ -45,19 +48,6 @@ echo "Creating Namespace: $jmeter_namespace"
 
 kubectl create namespace $jmeter_namespace
 
-exit
-
-echo
-
-echo "Creating Jmeter slave nodes"
-
-nodes=`kubectl get no | egrep -v "master|NAME" | wc -l`
-
-echo
-
-echo "Number of worker nodes on this cluster is " $nodes
-
-echo
 
 echo "Creating Jmeter slave replicas and service"
 
