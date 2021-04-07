@@ -18,23 +18,28 @@ echo
 
 
 while [[ -z "$ns_input" ]]; do
+
   echo -n "Create a new namespace for the JMeter resources: $JMETER_NAMESPACE_PREFIX"
   read ns_input
+
   if [ ! -z "$ns_input" ] ; then # If ns_input is not an empty string then
     jmeter_namespace="$JMETER_NAMESPACE_PREFIX$ns_input"
-    # Check if the new jmeter_namespace already exists
-    for jmns in $jm_namespaces; do
+    for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
       if [ $jmns == $jmeter_namespace ]; then
         echo "Namespace $jmeter_namespace already exists, please use a unique name."
-        ns_input=''
+        ns_input='' # Reset ns_input to empty upon name conflicts.
       fi
     done
   fi
+
 done
 
+
 while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
+
   echo -n "How many JMeter slaves do you want to use? (1-10): "
   read slave_num
+
 done
 
 
@@ -43,7 +48,6 @@ echo
 echo "Creating Namespace: $jmeter_namespace"
 
 kubectl create namespace $jmeter_namespace
-
 
 echo "Creating Jmeter slave replicas and service"
 
