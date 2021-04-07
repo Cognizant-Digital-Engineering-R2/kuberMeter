@@ -3,6 +3,7 @@
 
 working_dir=`pwd`
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
+GRAFANA_NAMESPACE=`awk -F= '/GRAFANA_NAMESPACE/{ print $2 }' ./kubermeter.properties`
 
 echo "Current list of namespaces on the kubernetes cluster:"
 
@@ -63,4 +64,24 @@ echo
 
 kubectl get -n $jmeter_namespace all
 
-echo namespace = $jmeter_namespace > $working_dir/tenant_export
+echo
+
+## Create jmeter database automatically in Influxdb
+
+echo "Creating Influxdb jmeter Database"
+
+influxdb_pod=`kubectl get po -n $GRAFANA_NAMESPACE | grep influxdb-jmeter | awk '{print $1}'`
+
+kubectl exec -ti -n $GRAFANA_NAMESPACE $influxdb_pod -- influx -execute "CREATE DATABASE jmeter"
+
+
+## Create the influxdb datasource in Grafana
+
+echo "Creating the Influxdb data source"
+
+grafana_pod=`kubectl get po -n $GRAFANA_NAMESPACE | grep jmeter-grafana | awk '{print $1}'`
+
+kubectl exec -ti -n $GRAFANA_NAMESPACE $grafana_pod -- curl 'http://admin:admin@127.0.0.1:3000/api/datasources' -X POST -H 'Content-Type: application/json;charset=UTF-8' --data-binary '{"name":"jmeterdb","type":"influxdb","url":"http://jmeter-influxdb:8086","access":"proxy","isDefault":true,"database":"jmeter","user":"admin","password":"admin"}'
+
+echo
+
