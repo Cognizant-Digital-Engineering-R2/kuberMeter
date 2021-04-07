@@ -8,23 +8,49 @@ echo "Current list of namespaces on the kubernetes cluster:"
 
 echo
 
-kubectl get namespaces | grep -v NAME | awk "/$JMETER_NAMESPACE_PREFIX/{print $1}"
+jm_namespaces=`kubectl get namespaces | grep -v NAME | awk '{print $1}' | awk "/$JMETER_NAMESPACE_PREFIX/{print $1}"`
+
+echo $jm_namespaces
 
 echo
 
-echo -n "Create a new namespace for the JMeter resources: $JMETER_NAMESPACE_PREFIX"
-read ns_input
+jmns_arr=$($jm_namespaces)
+
+# for [ $jmns in ($jm_namespaces) ]
+
+for jmns in $jm_namespaces; do
+  echo $jmns
+done
 
 
-while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]
-  do
-    echo "in while $slave_num"
-    echo -n "How many JMeter slaves do you want to use? (1-10): "
-    read slave_num
+exit
+
+
+while [[ -z "$ns_input" ]]; do
+  echo -n "Create a new namespace for the JMeter resources: $JMETER_NAMESPACE_PREFIX"
+  read ns_input
+
+#   if [ $? -eq 0 ]; then
+#   echo "Namespace $jmeter_namespace already exists, please select a unique name"
+#   echo "Current list of namespaces on the kubernetes cluster"
+#   sleep 2
+
+#   kubectl get namespaces | grep -v NAME | awk '{print $1}'
+#   exit 1
+# fi
+
+done
+
+
+while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
+  echo "in while $slave_num"
+  echo -n "How many JMeter slaves do you want to use? (1-10): "
+  read slave_num
 done
 
 
 jmeter_namespace="$JMETER_NAMESPACE_PREFIX$ns_input"
+echo $jmeter_namespace
 
 exit
 
