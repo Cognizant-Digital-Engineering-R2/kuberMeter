@@ -23,7 +23,7 @@ echo
 
 echo "Creating Influxdb and service..."
 
-kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/jmeter_influxdb.yaml
+kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/kubermeter_influxdb.yaml
 
 echo "Creating Grafana node and services..."
 
