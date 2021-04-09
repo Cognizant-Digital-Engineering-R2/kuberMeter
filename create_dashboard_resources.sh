@@ -17,15 +17,16 @@ echo "Creating Namespace: $DASHBOARD_NAMESPACE..."
 kubectl create namespace $DASHBOARD_NAMESPACE
 echo
 
-echo "Creating Influxdb and service..."
+echo "Creating InfluxDB deployment and service..."
 kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/kubermeter_influxdb.yaml
 echo
 
-echo "Creating Grafana node and services..."
+echo "Creating Grafana deployment and service..."
 kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/jmeter_grafana.yaml
 echo
 
 
+# Wait for all pods to be ready
 waiting_msg="Waiting for all pods to be ready.."
 iter="0"
 max_iter="10"
