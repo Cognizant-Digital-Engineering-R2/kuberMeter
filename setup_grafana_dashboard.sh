@@ -8,7 +8,7 @@ DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter.pr
 
 ## Create jmeter database automatically in Influxdb
 
-echo "Creating Influxdb jmeter Database"
+echo "Creating Influxdb jmeter Database..."
 
 influxdb_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep influxdb-jmeter | awk '{print $1}'`
 
@@ -17,7 +17,7 @@ kubectl exec -ti -n $DASHBOARD_NAMESPACE $influxdb_pod -- influx -execute "CREAT
 
 ## Create the influxdb datasource in Grafana
 
-echo "Creating the Influxdb data source"
+echo "Creating the Influxdb data source..."
 
 grafana_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep jmeter-grafana | awk '{print $1}'`
 
