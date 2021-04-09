@@ -4,8 +4,7 @@
 working_dir=`pwd`
 DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter.properties`
 
-Check If DASHBOARD_NAMESPACE exists
-
+# Check If DASHBOARD_NAMESPACE already exists
 kubectl get namespace $DASHBOARD_NAMESPACE > /dev/null 2>&1
 
 if [ $? -eq 0 ]
@@ -71,4 +70,5 @@ kubectl exec -ti -n $DASHBOARD_NAMESPACE $grafana_pod -- curl 'http://admin:admi
 '{"name":"jmeterdb","type":"influxdb","url":"http://kubermeter-influxdb:8086","access":"proxy","isDefault":true,"database":"jmeter","user":"admin","password":"admin"}'
 echo
 
-
+grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
+echo "Dashboard resources created. Access http://$grafana_front_end_ip from a browser to import the dashboard json template."
