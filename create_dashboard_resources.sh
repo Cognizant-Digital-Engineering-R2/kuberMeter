@@ -71,4 +71,5 @@ kubectl exec -ti -n $DASHBOARD_NAMESPACE $grafana_pod -- curl 'http://admin:admi
 echo
 
 grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
-echo "Dashboard resources created. Access http://$grafana_front_end_ip from a browser to import the dashboard json template."
+echo "Dashboard resources created. Access http://$grafana_front_end_ip from a browser to import the 'kubermeter-dashboard.json'. \
+Select 'jmeterdb' for Data source."

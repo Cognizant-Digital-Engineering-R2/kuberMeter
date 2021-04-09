@@ -5,7 +5,6 @@
       "label": "Data source",
       "description": "Point the data source to 'jmeter' database on InfluxDB",
       "type": "datasource",
-      "value": "jmeterdb",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
     },
