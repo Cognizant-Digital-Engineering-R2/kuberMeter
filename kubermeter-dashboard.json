@@ -2,9 +2,10 @@
   "__inputs": [
     {
       "name": "JMETER_DASHBOARD",
-      "label": "DB name",
-      "description": "Create a Datasource in Grafana that points to jmeter database",
+      "label": "Data source",
+      "description": "Point the data source to 'jmeter' database on InfluxDB",
       "type": "datasource",
+      "value": "jmeterdb",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
     },
