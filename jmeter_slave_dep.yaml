@@ -1,0 +1,27 @@
+# Kubernete definition file for jmeter-slaves and config map
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jmeter-slaves
+  labels:
+    jmeter_mode: slave
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      jmeter_mode: slave
+  template:
+    metadata:
+      labels:
+        jmeter_mode: slave
+    spec:
+      containers:
+      - name: jmslave
+        image: hs888555/kubermeter-jmeter-slave:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1099
+        - containerPort: 50000
+        workingDir: /tmp/kubermeter/current_test_plan
