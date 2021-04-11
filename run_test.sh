@@ -95,9 +95,9 @@ fi
 
 
 # Prompt for test_report_name: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
-echo "Current namespaces on the kubernetes cluster:"
+echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
-jm_namespaces=`kubectl get namespaces | grep -o "^kubermeter-jmeter-\w*"`
+jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
 [ -z "$jm_namespaces" ] && jm_namespaces='<none>'
 echo $jm_namespaces
 echo
