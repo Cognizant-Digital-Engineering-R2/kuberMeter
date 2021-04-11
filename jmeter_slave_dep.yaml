@@ -19,28 +19,9 @@ spec:
     spec:
       containers:
       - name: jmslave
-        image: kubernautslabs/jmeter_slave:latest
+        image: hs888555/kubermeter-jmeter-slave:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 1099
         - containerPort: 50000
         workingDir: /tmp/kubermeter/current_test_plan
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: jmeter-slaves-svc
-  labels:
-    jmeter_mode: slave
-spec:
-  clusterIP: None
-  ports:
-    - port: 1099
-      name: first
-      targetPort: 1099
-    - port: 50000
-      name: second
-      targetPort: 50000
-  selector:
-    jmeter_mode: slave
