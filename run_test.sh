@@ -78,7 +78,8 @@ if ! hash yq 2>/dev/null; then
 fi
 
 
-# Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, and the jmx_file and properties_file are located at its surface level. 
+# Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, 
+# and that the jmx_file and properties_file are located at its surface level. 
 if [ ! -d "$test_plan_dir" ]; then
   die "Directory '$test_plan_dir' does not exist! Use -h for help."
 elif [ $test_plan_dir_basename = $POD_TEST_PLAN_DIR ]; then
