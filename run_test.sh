@@ -71,6 +71,13 @@ test_plan_dir="$1"
 test_plan_dir_basename=`basename $test_plan_dir`
 
 
+if ! hash yq 2>/dev/null; then
+  echo "Yaml processcor yq v4.6.3+ required: https://github.com/mikefarah/yq"
+  echo "Run 'sudo wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq'"
+  exit 1
+fi
+
+
 # Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, and the jmx_file and properties_file are located at its surface level. 
 if [ ! -d "$test_plan_dir" ]; then
   die "Directory '$test_plan_dir' does not exist! Use -h for help."
