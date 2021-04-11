@@ -134,6 +134,10 @@ echo "Creating Namespace: $jmeter_namespace"
 kubectl create namespace $jmeter_namespace
 echo
 
+echo "Creating Jmeter master pod.."
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
+echo
+
 echo "Creating Jmeter slave pod(s)"
 yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
 echo
@@ -142,37 +146,38 @@ echo "Creating Jmeter slave service..."
 kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_svc.yaml
 echo
 
-echo "Creating Jmeter master pod.."
-kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
-echo
 
 # Wait for all pods to be ready
 waiting_msg="Waiting for all pods to be ready..."
-iter="0"
-max_iter="30"
-check_interval_seconds="3"
+wait_time_elapsed="0"
+wait_time_interval="3"
+wait_time_min="30"
+wait_time_max="120"
 all_conatiners_ready=false
+start_time=$(date +%s)
 
-while [[ "$all_conatiners_ready" = false && $iter -lt $max_iter ]]; do
+
+while [[ "$all_conatiners_ready" = false || $wait_time_elapsed -le $wait_time_min ]]; do
   
   container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
     -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
   [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   waiting_msg="${waiting_msg}."
   echo -ne "$waiting_msg \r"
-  sleep $check_interval_seconds
-  let "iter++"
+  sleep $wait_time_interval
+
+  now=$(date +%s)
+  wait_time_elapsed=$(($now - $start_time))
+  
+  if [[ $wait_time_elapsed -ge $wait_time_max ]]; then
+    echo "Containers are not ready within the limit of $wait_time_max seconds. Check the cluster health, \
+and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
+    exit 1
+  fi
 
 done
 
 echo 
-
-if [[ "$all_conatiners_ready" = false && $iter -eq $max_iter ]]; then
-  echo "Containers are not ready before timing out. Check the cluster health, or \
-use 'kubectl delete ns $jmeter_namespace' to start over.\n"
-  exit 1
-fi
-
 echo "JMeter master and slave pods are ready."
 echo
 
