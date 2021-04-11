@@ -121,9 +121,9 @@ done
 
 
 # Prompt for number of slave nodes to be created
-while [[ "$slave_num" -lt 1 || "$slave_num" -gt 20 ]]; do
+while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
 
-  echo -n "How many JMeter slaves do you want to use? (1-20): "
+  echo -n "How many JMeter slaves do you want to use? (1-10): "
   read slave_num
 
 done
@@ -150,8 +150,8 @@ echo
 # Wait for all pods to be ready
 waiting_msg="Waiting for all pods to be ready..."
 wait_time_elapsed="0"
-wait_time_interval="3"
-wait_time_min="30"
+wait_time_interval="5"
+wait_time_min=$((20 + 5*$slave_num))
 wait_time_max="120"
 all_conatiners_ready=false
 start_time=$(date +%s)
@@ -168,7 +168,7 @@ while [[ "$all_conatiners_ready" = false || $wait_time_elapsed -le $wait_time_mi
 
   now=$(date +%s)
   wait_time_elapsed=$(($now - $start_time))
-  
+
   if [[ $wait_time_elapsed -ge $wait_time_max ]]; then
     echo "Containers are not ready within the limit of $wait_time_max seconds. Check the cluster health, \
 and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
