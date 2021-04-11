@@ -120,6 +120,7 @@ while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
 
 done
 
+exit
 
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
@@ -165,8 +166,6 @@ echo "JMeter master and slave pods are ready."
 echo
 
 
-
-exit
 
 # Get master pod details and push test files
 master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`

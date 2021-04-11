@@ -18,7 +18,7 @@ kubectl create namespace $DASHBOARD_NAMESPACE
 echo
 
 echo "Creating InfluxDB deployment and service..."
-kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/kubermeter_influxdb.yaml
+kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/dashboard_influxdb.yaml
 echo
 
 echo "Creating Grafana deployment and service..."
