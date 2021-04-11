@@ -135,7 +135,7 @@ kubectl create namespace $jmeter_namespace
 echo
 
 echo "Creating Jmeter slave pod(s)"
-yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create create -n $jmeter_namespace -f -
+yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
 echo
 
 echo "Creating Jmeter slave service..."
@@ -177,7 +177,6 @@ echo "JMeter master and slave pods are ready."
 echo
 
 
-
 # Get master pod details and push test files
 master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
 msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename ..."
@@ -210,6 +209,8 @@ kubectl -n $jmeter_namespace cp $master_pod:$POD_KUBERMETER_DIR/$test_report_nam
 msg "Packing the test report and log file into ${test_report_name}.zip..."
 zip -qr $test_report_name.zip $test_report_name
 
+msg "Deleting namespace $jmeter_namespace..."
+kubectl delete ns $jmeter_namespace
 
 # Duplicated test_report_name fallback policy:
 
