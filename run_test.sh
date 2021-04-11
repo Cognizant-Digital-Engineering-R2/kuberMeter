@@ -71,6 +71,7 @@ test_plan_dir="$1"
 test_plan_dir_basename=`basename $test_plan_dir`
 
 
+# Checking yq pacakge availability
 if ! hash yq 2>/dev/null; then
   echo "Yaml processcor yq v4.6.3+ required: https://github.com/mikefarah/yq"
   echo "Run 'sudo wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq'"
@@ -91,7 +92,6 @@ else
     die "'$PROPERTIES_FILE.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   fi
 fi
-
 
 
 # Prompt for test_report_name: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
@@ -121,22 +121,25 @@ done
 
 
 # Prompt for number of slave nodes to be created
-while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
+while [[ "$slave_num" -lt 1 || "$slave_num" -gt 20 ]]; do
 
-  echo -n "How many JMeter slaves do you want to use? (1-10): "
+  echo -n "How many JMeter slaves do you want to use? (1-20): "
   read slave_num
 
 done
 
-exit
 
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
 kubectl create namespace $jmeter_namespace
 echo
 
-echo "Creating Jmeter slave pod(s) and service..."
-kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slaves.yaml
+echo "Creating Jmeter slave pod(s)"
+yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create create -n $jmeter_namespace -f -
+echo
+
+echo "Creating Jmeter slave service..."
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_svc.yaml
 echo
 
 echo "Creating Jmeter master pod.."
