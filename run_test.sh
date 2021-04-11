@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # https://betterdev.blog/minimal-safe-bash-script-template/
 
-set -Eeuo pipefail
-trap cleanup SIGINT SIGTERM ERR EXIT
-
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
 usage() {
@@ -30,12 +27,6 @@ Available options:
 EOF
   exit
 }
-
-cleanup() {
-  trap - SIGINT SIGTERM ERR EXIT
-  # script cleanup here
-}
-
 
 msg() {
   echo >&2 -e "${1-}"
@@ -94,13 +85,11 @@ else
 fi
 
 
-# jmeter_namespace: Namespace of the jmeter cluster in which the test will be run.
-# test_report_name: Name for the generated JMeter test report and output log. Must be at the surface level in the test plan directory.
 
-
-# Prompt for test_report_name, which will be used in the new jmeter_namespace
+# Prompt for test_report_name: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
 echo "Current namespaces on the kubernetes cluster:"
-jm_namespaces=`kubectl get namespaces | grep -v NAME | awk '{print $1}' | awk "/$JMETER_NAMESPACE_PREFIX/{print $1}"`
+echo
+jm_namespaces=`kubectl get namespaces | grep -o "^kubermeter-jmeter-\w*"`
 [ -z "$jm_namespaces" ] && jm_namespaces='<none>'
 echo $jm_namespaces
 echo
@@ -138,11 +127,11 @@ kubectl create namespace $jmeter_namespace
 echo
 
 echo "Creating Jmeter slave pod(s) and service..."
-kubectl create -n $jmeter_namespace -f $working_dir/jmeter_slaves.yaml
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slaves.yaml
 echo
 
 echo "Creating Jmeter master pod.."
-kubectl create -n $jmeter_namespace -f $working_dir/jmeter_master.yaml
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
 echo
 
 # Wait for all pods to be ready
@@ -154,7 +143,7 @@ all_conatiners_ready=false
 
 while [[ "$all_conatiners_ready" = false && $iter -lt $max_iter ]]; do
   
-  container_readiness_arr=(`kubectl get pods -n $DASHBOARD_NAMESPACE \
+  container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
     -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
   [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   waiting_msg="${waiting_msg}."
@@ -168,13 +157,16 @@ echo
 
 if [[ "$all_conatiners_ready" = false && $iter -eq $max_iter ]]; then
   echo "Containers are not ready before timing out. Check the cluster health, or \
-use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
+use 'kubectl delete ns $jmeter_namespace' to start over.\n"
   exit 1
 fi
 
 echo "JMeter master and slave pods are ready."
 echo
 
+
+
+exit
 
 # Get master pod details and push test files
 master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
