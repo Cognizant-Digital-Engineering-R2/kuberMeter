@@ -28,33 +28,38 @@ echo
 
 # Wait for all pods to be ready
 waiting_msg="Waiting for all pods to be ready.."
-iter="0"
-max_iter="10"
+wait_time_elapsed="0"
+wait_time_interval="2"
+wait_time_min="0"
+wait_time_max="30"
+start_time=$(date +%s)
 all_conatiners_ready=false
 
-
-while [[ "$all_conatiners_ready" = false && $iter -lt $max_iter ]]; do
+while [[ "$all_conatiners_ready" = false ]]; do
   
-  container_readiness_arr=(`kubectl get pods -n $DASHBOARD_NAMESPACE \
-    -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
-  [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   waiting_msg="${waiting_msg}."
   echo -ne "$waiting_msg \r"
-  sleep 1
-  let "iter++"
+  sleep $wait_time_interval
+
+  now=$(date +%s)
+  wait_time_elapsed=$(($now - $start_time))
+
+  if [[ $wait_time_elapsed -ge $wait_time_max ]]; then
+    echo "Containers are not ready within the limit of $wait_time_max seconds. Check the cluster health, \
+and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
+    exit 1
+  elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
+    container_readiness_arr=(`kubectl get pods -n $DASHBOARD_NAMESPACE \
+      -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
+    [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
+  fi
 
 done
 
 echo 
-
-if [[ "$all_conatiners_ready" = false && $iter -eq $max_iter ]]; then
-  echo "Containers are not ready before timing out. Check the cluster health, or \
-use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
-  exit 1
-fi
-
 echo "Dashboard components are ready."
 echo
+
 
 # Create jmeter database automatically in Influxdb
 echo "Creating Database 'jmeter' in influxdb..."
@@ -76,9 +81,10 @@ echo
 waiting_msg="Waiting for Grafana front-end external IP allocation..."
 wait_time_elapsed="0"
 wait_time_interval="2"
+wait_time_min="6"
 wait_time_max="60"
 start_time=$(date +%s)
-grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
+grafana_front_end_ip='<pending>'
 
 while [[ "$grafana_front_end_ip" = '<pending>' ]]; do
   
@@ -92,9 +98,9 @@ while [[ "$grafana_front_end_ip" = '<pending>' ]]; do
     echo "Grafana front-end external IP is not allocated within the limit of $wait_time_max seconds. Check the cluster health, \
 and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
+  elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
+    grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
   fi
-
-  grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
 
 done
 
