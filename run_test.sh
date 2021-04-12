@@ -157,11 +157,8 @@ all_conatiners_ready=false
 start_time=$(date +%s)
 
 
-while [[ "$all_conatiners_ready" = false || $wait_time_elapsed -le $wait_time_min ]]; do
+while [[ "$all_conatiners_ready" = false ]]; do
   
-  container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
-    -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
-  [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   waiting_msg="${waiting_msg}."
   echo -ne "$waiting_msg \r"
   sleep $wait_time_interval
@@ -173,6 +170,10 @@ while [[ "$all_conatiners_ready" = false || $wait_time_elapsed -le $wait_time_mi
     echo "Containers are not ready within the limit of $wait_time_max seconds. Check the cluster health, \
 and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     exit 1
+  elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
+    container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
+      -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
+    [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   fi
 
 done
