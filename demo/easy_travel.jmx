@@ -407,12 +407,12 @@ log.warn(userDir)</stringProp>
             </elementProp>
             <elementProp name="influxdbUrl" elementType="Argument">
               <stringProp name="Argument.name">influxdbUrl</stringProp>
-              <stringProp name="Argument.value">http://jmeter-influxdb:8086/write?db=jmeter</stringProp>
+              <stringProp name="Argument.value">http://kubermeter-influxdb.kubermeter-dashboard.svc.cluster.local:8086/write?db=jmeter</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="application" elementType="Argument">
               <stringProp name="Argument.name">application</stringProp>
-              <stringProp name="Argument.value">easytravel</stringProp>
+              <stringProp name="Argument.value">easy-travel</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="measurement" elementType="Argument">
@@ -442,12 +442,7 @@ log.warn(userDir)</stringProp>
             </elementProp>
             <elementProp name="eventTags" elementType="Argument">
               <stringProp name="Argument.name">eventTags</stringProp>
-              <stringProp name="Argument.value">easy_travel</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="app" elementType="Argument">
-              <stringProp name="Argument.name">app</stringProp>
-              <stringProp name="Argument.value">easy_travel</stringProp>
+              <stringProp name="Argument.value"></stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
           </collectionProp>
