@@ -94,7 +94,7 @@ else
 fi
 
 
-# Prompt for test_report_name: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
+# Prompt for jmeter_ns: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
 echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
 jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
@@ -102,23 +102,30 @@ jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
 echo $jm_namespaces
 echo
 
-while [[ -z "$test_report_name" ]]; do
+while [[ -z "$jmeter_ns" ]]; do
 
-  echo -n "Enter test_report_name to create a dedicated namespace for the test: $JMETER_NAMESPACE_PREFIX"
-  read test_report_name
+  echo -n "Complete the new namespace for the test: $JMETER_NAMESPACE_PREFIX"
+  read jmeter_ns
 
-  if [ ! -z "$test_report_name" ] ; then # If test_report_name is not an empty string then
-    jmeter_namespace="$JMETER_NAMESPACE_PREFIX$test_report_name"
+  if [ ! -z "$jmeter_ns" ] ; then # If jmeter_ns is not an empty string then
+    jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
     for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
       if [ $jmns == $jmeter_namespace ]; then
         echo "Namespace $jmeter_namespace already exists, please use a unique name."
-        test_report_name='' # Reset test_report_name to empty upon name conflicts.
+        jmeter_ns='' # Reset jmeter_ns to empty upon name conflicts.
       fi
     done
   fi
 
 done
 
+# Prompt for test_report_name: the generated JMeter test report and output log
+while [[ -z "$test_report_name" ]]; do
+
+  echo -n "Enter the new test_report_name: "
+  read test_report_name
+
+done
 
 # Prompt for number of slave nodes to be created
 while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
