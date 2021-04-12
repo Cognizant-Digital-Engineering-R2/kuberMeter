@@ -151,7 +151,7 @@ echo
 waiting_msg="Waiting for all pods to be ready..."
 wait_time_elapsed="0"
 wait_time_interval="5"
-wait_time_min=$((20 + 5*$slave_num))
+wait_time_min=$((25 + 8*$slave_num))
 wait_time_max="120"
 all_conatiners_ready=false
 start_time=$(date +%s)
