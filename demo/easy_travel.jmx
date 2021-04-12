@@ -412,7 +412,7 @@ log.warn(userDir)</stringProp>
             </elementProp>
             <elementProp name="application" elementType="Argument">
               <stringProp name="Argument.name">application</stringProp>
-              <stringProp name="Argument.value">easy-travel</stringProp>
+              <stringProp name="Argument.value">${__P(dashboard_app_name)}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
             <elementProp name="measurement" elementType="Argument">
