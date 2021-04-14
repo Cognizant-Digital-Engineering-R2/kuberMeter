@@ -29,9 +29,9 @@ echo
 # Wait for all pods to be ready
 waiting_msg="Waiting for all pods to be ready.."
 wait_time_elapsed="0"
-wait_time_interval="2"
-wait_time_min="0"
-wait_time_max="30"
+wait_time_interval="5"
+wait_time_min="60"
+wait_time_max="120"
 start_time=$(date +%s)
 all_conatiners_ready=false
 
@@ -80,9 +80,9 @@ echo
 # "Wait for Grafana front-end external IP allocation
 waiting_msg="Waiting for Grafana front-end external IP allocation..."
 wait_time_elapsed="0"
-wait_time_interval="2"
-wait_time_min="6"
-wait_time_max="60"
+wait_time_interval="5"
+wait_time_min="5"
+wait_time_max="120"
 start_time=$(date +%s)
 grafana_front_end_ip='<pending>'
 
