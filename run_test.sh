@@ -63,6 +63,7 @@ parse_params() {
 parse_params "$@"
 
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
+JMETER_SLAVES_SVC='jmeter-slaves-svc'
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
 JMX_FILE='test'
@@ -70,13 +71,6 @@ PROPERTIES_FILE='test'
 test_plan_dir="$1"
 test_plan_dir_basename=`basename $test_plan_dir`
 
-
-# Checking yq pacakge availability
-if ! hash yq 2>/dev/null; then
-  echo "Yaml processcor yq v4.6.3+ required: https://github.com/mikefarah/yq"
-  echo "Run 'sudo wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq'"
-  exit 1
-fi
 
 
 # Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, 
@@ -127,14 +121,6 @@ while [[ -z "$test_report_name" ]]; do
 
 done
 
-# Prompt for number of slave nodes to be created
-while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
-
-  echo -n "How many JMeter slaves do you want to use? (1-10): "
-  read slave_num
-
-done
-
 
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
@@ -146,7 +132,7 @@ kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
 echo
 
 echo "Creating Jmeter slave pod(s)"
-yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_dep.yaml
 echo
 
 echo "Creating Jmeter slave service..."
@@ -158,7 +144,7 @@ echo
 waiting_msg="Waiting for all pods to be ready..."
 wait_time_elapsed="0"
 wait_time_interval="5"
-wait_time_min=$((25 + 7*$slave_num))
+wait_time_min=$((30))
 wait_time_max="120"
 all_conatiners_ready=false
 start_time=$(date +%s)
@@ -173,6 +159,9 @@ while [[ "$all_conatiners_ready" = false ]]; do
   now=$(date +%s)
   wait_time_elapsed=$(($now - $start_time))
 
+  # TODO: removal
+  kubectl -n $jmeter_namespace get pods -o wide
+
   if [[ $wait_time_elapsed -ge $wait_time_max ]]; then
     echo "Containers are not ready within the limit of $wait_time_max seconds. Check the cluster health, \
 and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
@@ -181,6 +170,8 @@ and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
       -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
     [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
+    kubectl -n $jmeter_namespace exec -ti $master_pod -- getent ahostsv4 $JMETER_SLAVES_SVC | cut -d' ' -f1 | sort | uniq
   fi
 
 done
@@ -196,6 +187,23 @@ msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$
 kubectl -n $jmeter_namespace exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
 kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
 kubectl -n $jmeter_namespace exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+
+
+# Checking all slave pods are discovered by the service $JMETER_SLAVES_SVC
+iter="0"
+while [[ $iter -lt 15 ]]; do
+  
+  # "$slave_pod_service_connected" = false 
+  # kubectl -n $jmeter_namespace exec -ti $master_pod -- getent ahostsv4 $JMETER_SLAVES_SVC | cut -d' ' -f1 | sort -u | awk -v ORS=, '{print $1}' | sed 's/,$//'
+  
+  kubectl -n $jmeter_namespace exec -ti $master_pod -- getent ahostsv4 $JMETER_SLAVES_SVC | cut -d' ' -f1 | sort | uniq | wc -l
+  # kubectl -n $jmeter_namespace describe service $JMETER_SLAVES_SVC | grep "Endpoints:" | head -n 1 | awk '{print $2}' | awk -F, '{print NF}'
+  # kubectl -n $jmeter_namespace describe service $JMETER_SLAVES_SVC
+  # kubectl -n $jmeter_namespace get endpoints hostnames
+  sleep 2
+  let iter+=1
+
+done
 
 
 # Get slave pods details and push test files
@@ -222,6 +230,7 @@ kubectl -n $jmeter_namespace cp $master_pod:$POD_KUBERMETER_DIR/$test_report_nam
 msg "Packing the test report and log file into ${test_report_name}.zip..."
 zip -qr $test_report_name.zip $test_report_name
 
+exit
 msg "Deleting namespace $jmeter_namespace..."
 kubectl delete ns $jmeter_namespace
 
