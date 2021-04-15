@@ -31,11 +31,11 @@ echo
 
 
 # Wait for all pods to be ready
-waiting_msg="Waiting for all pods to be ready..."
+echo "Waiting for all pods to be ready..."
 wait_time_elapsed="0"
 wait_time_interval="5"
-wait_time_min="20"
-wait_time_max="120"
+wait_time_min="30"
+wait_time_max="180"
 start_time=$(date +%s)
 all_conatiners_ready=false
 ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[0-9]{1,3}'
