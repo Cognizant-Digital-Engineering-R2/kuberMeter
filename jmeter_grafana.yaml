@@ -4,18 +4,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jmeter-grafana
+  name: dashboard-grafana
   labels:
-    app: jmeter-grafana
+    app: dashboard-grafana
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jmeter-grafana
+      app: dashboard-grafana
   template:
     metadata:
       labels:
-        app: jmeter-grafana
+        app: dashboard-grafana
     spec:
       containers:
       - name: grafana
@@ -42,28 +42,28 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: jmeter-grafana-frontend
+  name: dashboard-grafana-frontend
   labels:
-    app: jmeter-grafana
+    app: dashboard-grafana
 spec:
   ports:
     - port: 80
       targetPort: 3000
   selector:
-    app: jmeter-grafana
+    app: dashboard-grafana
   type: LoadBalancer
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: jmeter-grafana
+  name: dashboard-grafana
   labels:
-    app: jmeter-grafana
+    app: dashboard-grafana
 spec:
   ports:
     - port: 3000
       targetPort: 3000
   selector:
-    app: jmeter-grafana
+    app: dashboard-grafana
   type: NodePort

@@ -3,6 +3,10 @@
 
 working_dir=`pwd`
 DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_PODS_PREFIX=`awk -F= '/DASHBOARD_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_GRAFANA=`awk -F= '/DASHBOARD_GRAFANA/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_GRAFANA_FRONTEND=`awk -F= '/DASHBOARD_GRAFANA_FRONTEND/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_INFLUXDB=`awk -F= '/DASHBOARD_INFLUXDB/{ print $2 }' ./kubermeter.properties`
 
 # Check If DASHBOARD_NAMESPACE already exists
 kubectl get namespace $DASHBOARD_NAMESPACE > /dev/null 2>&1
@@ -27,18 +31,18 @@ echo
 
 
 # Wait for all pods to be ready
-waiting_msg="Waiting for all pods to be ready.."
+waiting_msg="Waiting for all pods to be ready..."
 wait_time_elapsed="0"
 wait_time_interval="5"
-wait_time_min="60"
+wait_time_min="20"
 wait_time_max="120"
 start_time=$(date +%s)
 all_conatiners_ready=false
+ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[0-9]{1,3}'
+num_pods="2" # Grafana and InfluxDB
 
 while [[ "$all_conatiners_ready" = false ]]; do
   
-  waiting_msg="${waiting_msg}."
-  echo -ne "$waiting_msg \r"
   sleep $wait_time_interval
 
   now=$(date +%s)
@@ -49,9 +53,9 @@ while [[ "$all_conatiners_ready" = false ]]; do
 and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    container_readiness_arr=(`kubectl get pods -n $DASHBOARD_NAMESPACE \
-      -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
-    [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    kubectl -n $DASHBOARD_NAMESPACE get pods -o wide
+    num_pod_ips=`kubectl -n $DASHBOARD_NAMESPACE get pods -o wide | grep $DASHBOARD_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
+    [[ "$num_pod_ips" -eq $(($num_pods)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
   fi
 
 done
@@ -63,14 +67,14 @@ echo
 
 # Create jmeter database automatically in Influxdb
 echo "Creating Database 'jmeter' in influxdb..."
-influxdb_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep influxdb-jmeter | awk '{print $1}'`
+influxdb_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep $DASHBOARD_INFLUXDB | awk '{print $1}'`
 kubectl exec -ti -n $DASHBOARD_NAMESPACE $influxdb_pod -- influx -execute "CREATE DATABASE jmeter"
 echo
 
 
 # Create the influxdb datasource in Grafana
 echo "Creating the data source 'jmeterdb' linking grafana to influxdb ..."
-grafana_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep jmeter-grafana | awk '{print $1}'`
+grafana_pod=`kubectl get po -n $DASHBOARD_NAMESPACE | grep $DASHBOARD_GRAFANA | awk '{print $1}'`
 kubectl exec -ti -n $DASHBOARD_NAMESPACE $grafana_pod -- curl 'http://admin:admin@127.0.0.1:3000/api/datasources' \
 -X POST -H 'Content-Type: application/json;charset=UTF-8' --data-binary \
 '{"name":"jmeterdb","type":"influxdb","url":"http://kubermeter-influxdb:8086","access":"proxy","isDefault":true,"database":"jmeter","user":"admin","password":"admin"}'
@@ -99,7 +103,7 @@ while [[ "$grafana_front_end_ip" = '<pending>' ]]; do
 and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep jmeter-grafana-frontend | awk '{print $4}'`
+    grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep $DASHBOARD_GRAFANA_FRONTEND | awk '{print $4}'`
   fi
 
 done

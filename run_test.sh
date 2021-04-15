@@ -64,6 +64,7 @@ parse_params "$@"
 
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
 JMETER_SLAVES_SVC=`awk -F= '/JMETER_SLAVES_SVC/{ print $2 }' ./kubermeter.properties`
+JMETER_PODS_PREFIX=`awk -F= '/JMETER_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
 JMX_FILE='test'
@@ -152,8 +153,8 @@ wait_time_elapsed="0"
 wait_time_interval="5"
 wait_time_min="20"
 wait_time_max="180"
-all_conatiners_ready=false
 start_time=$(date +%s)
+all_conatiners_ready=false
 ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[0-9]{1,3}'
 num_slaves=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
 
@@ -170,8 +171,7 @@ and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
     kubectl -n $jmeter_namespace get pods -o wide
-    num_pod_ips=`kubectl -n kubermeter-jmeter-01 get pods -o wide | grep jmeter- | awk '{print $6}' | grep -Ec $ip_pat`
-    echo "num_pod_ips $num_pod_ips, num_slaves $num_slaves"
+    num_pod_ips=`kubectl -n $jmeter_namespace get pods -o wide | grep $JMETER_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
     [[ "$num_pod_ips" -eq $(($num_slaves + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
     # container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
     # -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
