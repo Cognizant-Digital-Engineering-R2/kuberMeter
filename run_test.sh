@@ -155,7 +155,7 @@ wait_time_min="20"
 wait_time_max="180"
 start_time=$(date +%s)
 all_conatiners_ready=false
-ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[0-9]{1,3}'
+ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
 num_slaves=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
 
 while [[ "$all_conatiners_ready" = false ]]; do

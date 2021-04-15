@@ -38,7 +38,7 @@ wait_time_min="30"
 wait_time_max="180"
 start_time=$(date +%s)
 all_conatiners_ready=false
-ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[0-9]{1,3}'
+ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
 num_pods="2" # Grafana and InfluxDB
 
 while [[ "$all_conatiners_ready" = false ]]; do
