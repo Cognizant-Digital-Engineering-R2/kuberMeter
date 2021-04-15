@@ -39,7 +39,7 @@ wait_time_max="180"
 start_time=$(date +%s)
 all_conatiners_ready=false
 ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
-num_pods="2" # Grafana and InfluxDB
+NUM_PODS="2" # Grafana and InfluxDB
 
 while [[ "$all_conatiners_ready" = false ]]; do
   
@@ -54,7 +54,7 @@ and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
     num_pod_ips=`kubectl -n $DASHBOARD_NAMESPACE get pods -o wide | grep $DASHBOARD_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
-    [[ "$num_pod_ips" -eq $(($num_pods)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    [[ "$num_pod_ips" -eq $(($NUM_PODS)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
     kubectl -n $DASHBOARD_NAMESPACE get pods -o wide
   fi
 
