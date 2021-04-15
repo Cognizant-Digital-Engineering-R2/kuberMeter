@@ -20,7 +20,7 @@ spec:
       containers:
       - name: grafana
         image: grafana/grafana:5.2.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
           protocol: TCP

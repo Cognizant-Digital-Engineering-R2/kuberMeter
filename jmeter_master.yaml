@@ -20,7 +20,7 @@ spec:
       containers:
       - name: jmmaster
         image: hs888555/kubermeter-jmeter-master:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: [ "/bin/bash", "-c", "--" ]
         args: [ "while true; do sleep 30; done;" ]
         volumeMounts:
