@@ -26,7 +26,7 @@ kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/dashboard_influxdb.yaml
 echo
 
 echo "Creating Grafana deployment and service..."
-kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/jmeter_grafana.yaml
+kubectl create -n $DASHBOARD_NAMESPACE -f $working_dir/dashboard_grafana.yaml
 echo
 
 
