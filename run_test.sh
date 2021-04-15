@@ -96,7 +96,20 @@ else
 fi
 
 
-# Prompt for jmeter_ns: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
+# Read in jmeter_ns which will be used in the new jmeter_namespace
+jmeter_ns=`awk -F= '/kubermeter_namespace/{ print $2 }' $test_plan_dir/test.properties`
+test_report_name=`awk -F= '/kubermeter_test_report_name/{ print $2 }' $test_plan_dir/test.properties`
+
+if [ -z "$jmeter_ns" ] ; then
+  echo "kubermeter_namespace is missing from $test_plan_dir/test.properties"
+  exit 1
+elif [ -z "$test_report_name" ] ; then
+  echo "kubermeter_test_report_name is missing from $test_plan_dir/test.properties"
+  exit 1
+fi
+
+jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
+
 echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
 jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
@@ -104,31 +117,13 @@ jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
 echo $jm_namespaces
 echo
 
-while [[ -z "$jmeter_ns" ]]; do
-
-  echo -n "Complete the new namespace for the test: $JMETER_NAMESPACE_PREFIX"
-  read jmeter_ns
-
-  if [ ! -z "$jmeter_ns" ] ; then # If jmeter_ns is not an empty string then
-    jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
-    for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
-      if [ $jmns == $jmeter_namespace ]; then
-        echo "Namespace $jmeter_namespace already exists, please use a unique name."
-        jmeter_ns='' # Reset jmeter_ns to empty upon name conflicts.
-      fi
-    done
+# Check if jmeter_namespace collides with existing namespaces
+for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
+  if [ $jmns == $jmeter_namespace ]; then
+    echo "Namespace $jmeter_namespace already exists, please modify kubermeter_namespace in test.properties."
+    exit 1
   fi
-
 done
-
-# Prompt for test_report_name: the generated JMeter test report and output log
-while [[ -z "$test_report_name" ]]; do
-
-  echo -n "Enter the new test_report_name: "
-  read test_report_name
-
-done
-
 
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
