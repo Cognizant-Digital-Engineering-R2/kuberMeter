@@ -5,7 +5,7 @@ working_dir=`pwd`
 DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter.properties`
 DASHBOARD_PODS_PREFIX=`awk -F= '/DASHBOARD_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
 DASHBOARD_GRAFANA=`awk -F= '/DASHBOARD_GRAFANA/{ print $2 }' ./kubermeter.properties`
-DASHBOARD_GRAFANA_FRONTEND=`awk -F= '/DASHBOARD_GRAFANA_FRONTEND/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_FRONTEND=`awk -F= '/DASHBOARD_FRONTEND/{ print $2 }' ./kubermeter.properties`
 DASHBOARD_INFLUXDB=`awk -F= '/DASHBOARD_INFLUXDB/{ print $2 }' ./kubermeter.properties`
 
 # Check If DASHBOARD_NAMESPACE already exists
@@ -53,9 +53,9 @@ while [[ "$all_conatiners_ready" = false ]]; do
 and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    kubectl -n $DASHBOARD_NAMESPACE get pods -o wide
     num_pod_ips=`kubectl -n $DASHBOARD_NAMESPACE get pods -o wide | grep $DASHBOARD_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
     [[ "$num_pod_ips" -eq $(($num_pods)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    kubectl -n $DASHBOARD_NAMESPACE get pods -o wide
   fi
 
 done
@@ -103,7 +103,7 @@ while [[ "$grafana_front_end_ip" = '<pending>' ]]; do
 and/or use 'kubectl delete ns $DASHBOARD_NAMESPACE' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep $DASHBOARD_GRAFANA_FRONTEND | awk '{print $4}'`
+    grafana_front_end_ip=`kubectl get svc -n $DASHBOARD_NAMESPACE | grep $DASHBOARD_FRONTEND | awk '{print $4}'`
   fi
 
 done

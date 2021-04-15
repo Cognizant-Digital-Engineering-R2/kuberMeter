@@ -170,9 +170,9 @@ while [[ "$all_conatiners_ready" = false ]]; do
 and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    kubectl -n $jmeter_namespace get pods -o wide
     num_pod_ips=`kubectl -n $jmeter_namespace get pods -o wide | grep $JMETER_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
     [[ "$num_pod_ips" -eq $(($num_slaves + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    kubectl -n $jmeter_namespace get pods -o wide
     # container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
     # -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
     # echo ${container_readiness_arr[*]}
