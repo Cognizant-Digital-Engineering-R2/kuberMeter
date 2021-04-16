@@ -112,7 +112,7 @@ jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
 
 echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
-jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
+jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX[a-z0-9\-]*"`
 [ -z "$jm_namespaces" ] && jm_namespaces='<none>'
 echo $jm_namespaces
 echo
