@@ -63,8 +63,6 @@ parse_params() {
 parse_params "$@"
 
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
-JMETER_SLAVES_SVC=`awk -F= '/JMETER_SLAVES_SVC/{ print $2 }' ./kubermeter.properties`
-JMETER_PODS_PREFIX=`awk -F= '/JMETER_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
 JMX_FILE='test'
@@ -96,34 +94,47 @@ else
 fi
 
 
-# Read in jmeter_ns which will be used in the new jmeter_namespace
-jmeter_ns=`awk -F= '/kubermeter_namespace/{ print $2 }' $test_plan_dir/test.properties`
-test_report_name=`awk -F= '/kubermeter_test_report_name/{ print $2 }' $test_plan_dir/test.properties`
-
-if [ -z "$jmeter_ns" ] ; then
-  echo "kubermeter_namespace is missing from $test_plan_dir/test.properties"
-  exit 1
-elif [ -z "$test_report_name" ] ; then
-  echo "kubermeter_test_report_name is missing from $test_plan_dir/test.properties"
-  exit 1
-fi
-
-jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
-
+# Prompt for jmeter_ns: the generated JMeter test report and output log, which will also be used in the new jmeter_namespace
 echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
-jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX[a-z0-9\-]*"`
+jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX\w*"`
 [ -z "$jm_namespaces" ] && jm_namespaces='<none>'
 echo $jm_namespaces
 echo
 
-# Check if jmeter_namespace collides with existing namespaces
-for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
-  if [ $jmns == $jmeter_namespace ]; then
-    echo "Namespace $jmeter_namespace already exists, please modify kubermeter_namespace in test.properties."
-    exit 1
+while [[ -z "$jmeter_ns" ]]; do
+
+  echo -n "Complete the new namespace for the test: $JMETER_NAMESPACE_PREFIX"
+  read jmeter_ns
+
+  if [ ! -z "$jmeter_ns" ] ; then # If jmeter_ns is not an empty string then
+    jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
+    for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exists.
+      if [ $jmns == $jmeter_namespace ]; then
+        echo "Namespace $jmeter_namespace already exists, please use a unique name."
+        jmeter_ns='' # Reset jmeter_ns to empty upon name conflicts.
+      fi
+    done
   fi
+
 done
+
+# Prompt for test_report_name: the generated JMeter test report and output log
+while [[ -z "$test_report_name" ]]; do
+
+  echo -n "Enter the new test_report_name: "
+  read test_report_name
+
+done
+
+# Prompt for number of slave nodes to be created
+while [[ "$slave_num" -lt 1 || "$slave_num" -gt 10 ]]; do
+
+  echo -n "How many JMeter slaves do you want to use? (1-10): "
+  read slave_num
+
+done
+
 
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
@@ -135,26 +146,28 @@ kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
 echo
 
 echo "Creating Jmeter slave pod(s)"
-kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_dep.yaml
+yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
 echo
 
 echo "Creating Jmeter slave service..."
 kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_svc.yaml
 echo
 
-echo "Waiting for all pods to be ready..."
-echo
+
+# Wait for all pods to be ready
+waiting_msg="Waiting for all pods to be ready..."
 wait_time_elapsed="0"
 wait_time_interval="5"
-wait_time_min="20"
-wait_time_max="180"
-start_time=$(date +%s)
+wait_time_min=$((25 + 7*$slave_num))
+wait_time_max="120"
 all_conatiners_ready=false
-ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
-num_slaves=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
+start_time=$(date +%s)
+
 
 while [[ "$all_conatiners_ready" = false ]]; do
   
+  waiting_msg="${waiting_msg}."
+  echo -ne "$waiting_msg \r"
   sleep $wait_time_interval
 
   now=$(date +%s)
@@ -165,12 +178,9 @@ while [[ "$all_conatiners_ready" = false ]]; do
 and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
-    num_pod_ips=`kubectl -n $jmeter_namespace get pods -o wide | grep $JMETER_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
-    [[ "$num_pod_ips" -eq $(($num_slaves + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
-    kubectl -n $jmeter_namespace get pods -o wide
-    # container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
-    # -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
-    # echo ${container_readiness_arr[*]}
+    container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
+      -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
+    [[ ${container_readiness_arr[*]} =~ true ]] && all_conatiners_ready=true || all_conatiners_ready=false
   fi
 
 done

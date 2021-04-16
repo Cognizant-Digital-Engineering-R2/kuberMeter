@@ -4,22 +4,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: influxdb-jmeter
+  name: dashboard-influxdb
   labels:
-    app: influxdb-jmeter
+    app: dashboard-influxdb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: influxdb-jmeter
+      app: dashboard-influxdb
   template:
     metadata:
       labels:
-        app: influxdb-jmeter
+        app: dashboard-influxdb
     spec:
       containers:
         - image: influxdb:1.8.0
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: influxdb
           volumeMounts:
           - name: config-volume
@@ -42,7 +42,7 @@ kind: ConfigMap
 metadata:
   name: influxdb-config
   labels:
-    app: influxdb-jmeter
+    app: dashboard-influxdb
 data:
   influxdb.conf: |
     [meta]
@@ -65,7 +65,7 @@ kind: Service
 metadata:
   name: kubermeter-influxdb
   labels:
-    app: influxdb-jmeter
+    app: dashboard-influxdb
 spec:
   ports:
     - port: 8083
@@ -78,4 +78,4 @@ spec:
       name: graphite
       targetPort: 2003
   selector:
-    app: influxdb-jmeter
+    app: dashboard-influxdb

@@ -17,7 +17,7 @@ Implementing on Google Kubernete Engine (GKE) with `dev_GKE` branch.
 
 . Import the JMeter dashboard (`kubermeter-dashboard.json`) in Grafana UI.
 
-. Start the load test: `./run_test.sh test_plan_dir. Use `./start_test.sh -h` for help.
+. Start the load test: `./run_test.sh test_plan_dir. Use `./run_test.sh -h` for help.
 
 original guide
 "Load Testing Jmeter On Kubernetes" on the original medium blog post: https://goo.gl/mkoX9E

@@ -20,7 +20,7 @@ spec:
       containers:
       - name: jmmaster
         image: hs888555/kubermeter-jmeter-master:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: [ "/bin/bash", "-c", "--" ]
         args: [ "while true; do sleep 30; done;" ]
         volumeMounts:
@@ -33,6 +33,14 @@ spec:
         ports:
         - containerPort: 60000
         workingDir: /tmp/kubermeter/current_test_plan
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1000Mi"
+            cpu: "500m"
+
       volumes:
       - name: loadtest 
         configMap:
