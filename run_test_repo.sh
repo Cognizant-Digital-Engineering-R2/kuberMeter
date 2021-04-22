@@ -8,9 +8,10 @@ Usage:
 
 $(basename "${BASH_SOURCE[0]}") [-h] test_plan_repo jmx_file properties_file
 
-test_plan_repo: The test plan repository, 
+test_plan_repo: The test plan repository, must contains a kubermeter.properties.
 jmx_file: jmx file to be run with. Must be at the surface level of test_plan_repo.
 properties_file: properties file to be run with. Must be at the surface level of test_plan_repo.
+test_report_name: The name for the report to be generated.
 
 This script will clone the test repo, create a new JMeter namespace and resources on an existing kuberntes cluster and then launch JMeter test.
 It requires that you supply the test plan directory (`test_plan_repo`), which must contain `test.jmx` and `test.properties` at surface level.
@@ -55,7 +56,7 @@ parse_params() {
   args=("$@")
 
   # check required params and arguments
-  [[ ${#args[@]} -lt 3 ]] && die "Arguments incomplete. Use -h for help."
+  [[ ${#args[@]} -lt 4 ]] && die "Arguments incomplete. Use -h for help."
 
   return 0
 }
@@ -65,6 +66,7 @@ parse_params "$@"
 test_plan_repo="$1"
 jmx_file=`basename $2 .jmx`
 properties_file=`basename $3 .properties`
+test_report_name="$4"
 
 TEMP_REPO='temp_repo'
 POD_TEST_PLAN_DIR='current_test_plan'
@@ -104,13 +106,9 @@ fi
 
 # Read in jmeter_ns which will be used in the new jmeter_namespace
 jmeter_ns=`awk -F= '/kubermeter_namespace/{ print $2 }' $test_plan_dir/test.properties`
-test_report_name=`awk -F= '/kubermeter_test_report_name/{ print $2 }' $test_plan_dir/test.properties`
 
 if [ -z "$jmeter_ns" ] ; then
   echo "kubermeter_namespace is missing from $test_plan_dir/test.properties"
-  exit 1
-elif [ -z "$test_report_name" ] ; then
-  echo "kubermeter_test_report_name is missing from $test_plan_dir/test.properties"
   exit 1
 fi
 
