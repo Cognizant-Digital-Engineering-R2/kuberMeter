@@ -61,6 +61,7 @@ parse_params() {
 }
 
 parse_params "$@"
+test_plan_repo="$1"
 TEMP_REPO='temp_repo'
 CURRENT_TEST_PLAN='current_test_plan'
 
