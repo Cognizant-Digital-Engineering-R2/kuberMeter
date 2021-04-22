@@ -172,9 +172,6 @@ and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     num_pod_ips=`kubectl -n $jmeter_namespace get pods -o wide | grep $JMETER_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
     [[ "$num_pod_ips" -eq $(($num_slaves + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
     kubectl -n $jmeter_namespace get pods -o wide
-    # container_readiness_arr=(`kubectl get pods -n $jmeter_namespace \
-    # -o jsonpath='{.items[*].status.containerStatuses[*].ready}'`)
-    # echo ${container_readiness_arr[*]}
   fi
 
 done
@@ -187,24 +184,21 @@ echo
 # Get master pod details and push test files
 master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
 msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR..."
-kubectl -n $jmeter_namespace exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
-kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
-kubectl -n $jmeter_namespace exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR
+
 
 
 # Get slave pods details and push test files
 slave_pods=(`kubectl get po -n $jmeter_namespace | grep jmeter-slave | awk '{print $1}'`)
 for slave_pod in ${slave_pods[@]}; do
   msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR..."
-  kubectl -n $jmeter_namespace exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
-  kubectl -n $jmeter_namespace cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
-  kubectl -n $jmeter_namespace exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+  kubectl -n $jmeter_namespace cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR
 done
 
 
 # Executing test and store test results remotely
 msg "Starting the JMeter test..."
-kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $test_plan_dir $JMX_FILE.jmx $PROPERTIES_FILE.properties $test_report_name.jtl
+kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $POD_TEST_PLAN_DIR $JMX_FILE.jmx $PROPERTIES_FILE.properties $test_report_name.jtl
 
 msg "Generating the JMeter HTML report..."
 kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /generate_report $POD_KUBERMETER_DIR/$test_report_name.jtl $POD_KUBERMETER_DIR/$test_report_name
