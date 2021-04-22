@@ -8,9 +8,11 @@ usage() {
 
 Usage: 
 
-$(basename "${BASH_SOURCE[0]}") [-h] test_plan_repo
+$(basename "${BASH_SOURCE[0]}") [-h] test_plan_repo jmx_file properties_file
 
-test_plan_repo: The test plan repository, which must contain test.jmx and test.properties at surface level.
+test_plan_repo: The test plan repository, 
+jmx_file: jmx file to be run with. Must be at the surface level of test_plan_repo.
+properties_file: properties file to be run with. Must be at the surface level of test_plan_repo.
 
 This script will clone the test repo, create a new JMeter namespace and resources on an existing kuberntes cluster and then launch JMeter test.
 It requires that you supply the test plan directory (`test_plan_repo`), which must contain `test.jmx` and `test.properties` at surface level.
@@ -55,7 +57,7 @@ parse_params() {
   args=("$@")
 
   # check required params and arguments
-  [[ ${#args[@]} -lt 1 ]] && die "Arguments incomplete. Use -h for help."
+  [[ ${#args[@]} -lt 3 ]] && die "Arguments incomplete. Use -h for help."
 
   return 0
 }
@@ -68,11 +70,14 @@ JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kuber
 JMETER_SLAVES_SVC=`awk -F= '/JMETER_SLAVES_SVC/{ print $2 }' ./kubermeter-settings.properties`
 JMETER_PODS_PREFIX=`awk -F= '/JMETER_PODS_PREFIX/{ print $2 }' ./kubermeter-settings.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
-JMX_FILE='test'
-PROPERTIES_FILE='test'
+jmx_file="$2"
+properties_file="$3"
 test_plan_dir="$script_dir/$POD_TEST_PLAN_DIR"
 
 
+echo $jmx_file
+echo $properties_file
+exit
 # Checking yq pacakge availability
 if ! hash yq 2>/dev/null; then
   echo "Yaml processcor yq v4.6.3+ required: https://github.com/mikefarah/yq"
@@ -92,10 +97,10 @@ mv $script_dir/$TEMP_REPO $script_dir/$POD_TEST_PLAN_DIR
 if [ ! -d "$test_plan_dir" ]; then
   die "Directory '$test_plan_dir' does not exist! Use -h for help."
 else
-  if [ ! -f "$test_plan_dir/$JMX_FILE.jmx" ]; then
-    die "'$JMX_FILE.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
-  elif [ ! -f "$test_plan_dir/$PROPERTIES_FILE.properties" ]; then
-    die "'$PROPERTIES_FILE.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+  if [ ! -f "$test_plan_dir/$jmx_file.jmx" ]; then
+    die "'$jmx_file.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+  elif [ ! -f "$test_plan_dir/$properties_file.properties" ]; then
+    die "'$properties_file.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   fi
 fi
 
@@ -198,7 +203,7 @@ done
 
 # Executing test and store test results remotely
 msg "Starting the JMeter test..."
-kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $POD_TEST_PLAN_DIR $JMX_FILE.jmx $PROPERTIES_FILE.properties $test_report_name.jtl
+kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /load_test $POD_KUBERMETER_DIR $POD_TEST_PLAN_DIR $jmx_file.jmx $properties_file.properties $test_report_name.jtl
 
 msg "Generating the JMeter HTML report..."
 kubectl exec -ti -n $jmeter_namespace $master_pod -- /bin/bash /generate_report $POD_KUBERMETER_DIR/$test_report_name.jtl $POD_KUBERMETER_DIR/$test_report_name
