@@ -1,0 +1,14 @@
+# Kubernete definition file
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubermeter-test-reports
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/kubermeter"
