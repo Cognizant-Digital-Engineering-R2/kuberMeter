@@ -64,7 +64,7 @@ parse_params "$@"
 TEMP_REPO='temp_repo'
 CURRENT_TEST_PLAN='current_test_plan'
 
-rm -rf $test_plan_repo $script_dir/$TEMP_REPO
+rm -rf $script_dir/$TEMP_REPO
 git clone $test_plan_repo $script_dir/$TEMP_REPO
-rm -rf $test_plan_repo $script_dir/$CURRENT_TEST_PLAN
-mv $script_dir/temp $script_dir/$CURRENT_TEST_PLAN
+rm -rf $script_dir/$CURRENT_TEST_PLAN
+mv $script_dir/$TEMP_REPO $script_dir/$CURRENT_TEST_PLAN
