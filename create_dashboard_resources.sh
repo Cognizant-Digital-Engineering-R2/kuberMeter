@@ -2,11 +2,11 @@
 # Create Grafana workload and services on an existing kuberntes cluster
 
 working_dir=`pwd`
-DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter.properties`
-DASHBOARD_PODS_PREFIX=`awk -F= '/DASHBOARD_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
-DASHBOARD_GRAFANA=`awk -F= '/DASHBOARD_GRAFANA/{ print $2 }' ./kubermeter.properties`
-DASHBOARD_FRONTEND=`awk -F= '/DASHBOARD_FRONTEND/{ print $2 }' ./kubermeter.properties`
-DASHBOARD_INFLUXDB=`awk -F= '/DASHBOARD_INFLUXDB/{ print $2 }' ./kubermeter.properties`
+DASHBOARD_NAMESPACE=`awk -F= '/DASHBOARD_NAMESPACE/{ print $2 }' ./kubermeter-settings.properties`
+DASHBOARD_PODS_PREFIX=`awk -F= '/DASHBOARD_PODS_PREFIX/{ print $2 }' ./kubermeter-settings.properties`
+DASHBOARD_GRAFANA=`awk -F= '/DASHBOARD_GRAFANA/{ print $2 }' ./kubermeter-settings.properties`
+DASHBOARD_FRONTEND=`awk -F= '/DASHBOARD_FRONTEND/{ print $2 }' ./kubermeter-settings.properties`
+DASHBOARD_INFLUXDB=`awk -F= '/DASHBOARD_INFLUXDB/{ print $2 }' ./kubermeter-settings.properties`
 
 # Check If DASHBOARD_NAMESPACE already exists
 kubectl get namespace $DASHBOARD_NAMESPACE > /dev/null 2>&1

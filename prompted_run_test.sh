@@ -62,7 +62,7 @@ parse_params() {
 
 parse_params "$@"
 
-JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
+JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter-settings.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
 POD_TEST_PLAN_DIR='current_test_plan'
 JMX_FILE='test'
