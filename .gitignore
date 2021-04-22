@@ -11,3 +11,5 @@ gitign_*
 *_gitign
 *_gitign_*
 .vscode
+temp_repo
+current_test_plan
