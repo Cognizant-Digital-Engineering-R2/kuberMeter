@@ -132,39 +132,32 @@ for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exist
   fi
 done
 
-
-# slave_num=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
-slave_num=`awk -F= '/jmeter_slave_pod_num/{ print $2 }' $test_plan_dir/kubermeter.properties`
-slave_memory=`awk -F= '/jmeter_slave_pod_momory/{ print $2 }' $test_plan_dir/kubermeter.properties`
-slave_cpu=`awk -F= '/jmeter_slave_pod_cpu/{ print $2 }' $test_plan_dir/kubermeter.properties`
-echo "slave_num $slave_num"
-if [ -z "$jmeter_ns" ] ; then
-  echo "number_of_jmeter_slaves is missing from $test_plan_dir/kubermeter.properties"
-  exit 1
-fi
-echo "Creating Jmeter slave pod(s)"
-# yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
-yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | \
-yq e ".spec.template.spec.containers[0].resources.requests.memory |= $slave_memory"  - | \
-yq e ".spec.template.spec.containers[0].resources.requests.cpu |= $slave_cpu"  - | \
-yq e ".spec.template.spec.containers[0].resources.limits.memory |= $slave_memory"  - | \
-yq e ".spec.template.spec.containers[0].resources.limits.cpu |= $slave_cpu"  -
-
-echo
-exit
-
-
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
 kubectl create namespace $jmeter_namespace
 echo
 
-echo "Creating Jmeter master pod.."
-kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
-echo
+
+# Read slave pod specs from kubermeter.properties and create them
+slave_num=`awk -F= '/jmeter_slave_pod_num/{ print $2 }' $test_plan_dir/kubermeter.properties`
+slave_memory=`awk -F= '/jmeter_slave_pod_momory/{ print $2 }' $test_plan_dir/kubermeter.properties`
+slave_cpu=`awk -F= '/jmeter_slave_pod_cpu/{ print $2 }' $test_plan_dir/kubermeter.properties`
+if [ -z "$jmeter_ns" ] ; then
+  echo "number_of_jmeter_slaves is missing from $test_plan_dir/kubermeter.properties"
+  exit 1
+fi
 
 echo "Creating Jmeter slave pod(s)"
-kubectl create -n $jmeter_namespace -f $script_dir/jmeter_slave_dep.yaml
+yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | \
+yq e ".spec.template.spec.containers[0].resources.requests.memory |= $slave_memory"  - | \
+yq e ".spec.template.spec.containers[0].resources.requests.cpu |= $slave_cpu"  - | \
+yq e ".spec.template.spec.containers[0].resources.limits.memory |= $slave_memory"  - | \
+yq e ".spec.template.spec.containers[0].resources.limits.cpu |= $slave_cpu"  - | \
+kubectl create -n $jmeter_namespace -f -
+echo
+
+echo "Creating Jmeter master pod.."
+kubectl create -n $jmeter_namespace -f $script_dir/jmeter_master.yaml
 echo
 
 echo "Creating Jmeter slave service..."
