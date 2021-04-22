@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # https://betterdev.blog/minimal-safe-bash-script-template/
 
-script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
-
 usage() {
   cat <<EOF
 
@@ -62,22 +60,21 @@ parse_params() {
   return 0
 }
 
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 parse_params "$@"
 test_plan_repo="$1"
+jmx_file=`basename $2 .jmx`
+properties_file=`basename $3 .properties`
+
 TEMP_REPO='temp_repo'
 POD_TEST_PLAN_DIR='current_test_plan'
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter-settings.properties`
 JMETER_SLAVES_SVC=`awk -F= '/JMETER_SLAVES_SVC/{ print $2 }' ./kubermeter-settings.properties`
 JMETER_PODS_PREFIX=`awk -F= '/JMETER_PODS_PREFIX/{ print $2 }' ./kubermeter-settings.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
-jmx_file="$2"
-properties_file="$3"
 test_plan_dir="$script_dir/$POD_TEST_PLAN_DIR"
 
 
-echo $jmx_file
-echo $properties_file
-exit
 # Checking yq pacakge availability
 if ! hash yq 2>/dev/null; then
   echo "Yaml processcor yq v4.6.3+ required: https://github.com/mikefarah/yq"
@@ -119,6 +116,7 @@ fi
 
 jmeter_namespace="$JMETER_NAMESPACE_PREFIX$jmeter_ns"
 
+echo
 echo "Current $JMETER_NAMESPACE_PREFIX* namespaces on the kubernetes cluster:"
 echo
 jm_namespaces=`kubectl get namespaces | grep -o "^$JMETER_NAMESPACE_PREFIX[a-z0-9\-]*"`
