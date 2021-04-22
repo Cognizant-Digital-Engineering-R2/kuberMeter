@@ -96,19 +96,21 @@ mv $script_dir/$TEMP_REPO $script_dir/$POD_TEST_PLAN_DIR
 if [ ! -d "$test_plan_dir" ]; then
   die "Directory '$test_plan_dir' does not exist! Use -h for help."
 else
-  if [ ! -f "$test_plan_dir/$jmx_file.jmx" ]; then
-    die "'$jmx_file.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+  if [ ! -f "$test_plan_dir/kubermeter.properties" ]; then
+    die "'kubermeter.properties' does not exist at the surface level of repository '$test_plan_repo'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+  elif [ ! -f "$test_plan_dir/$jmx_file.jmx" ]; then
+    die "'$jmx_file.jmx' does not exist at the surface level of repository '$test_plan_repo'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   elif [ ! -f "$test_plan_dir/$properties_file.properties" ]; then
-    die "'$properties_file.properties' does not exist at the surface level of directory $test_plan_dir.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
+    die "'$properties_file.properties' does not exist at the surface level of repository $test_plan_repo.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
   fi
 fi
 
 
 # Read in jmeter_ns which will be used in the new jmeter_namespace
-jmeter_ns=`awk -F= '/kubermeter_namespace/{ print $2 }' $test_plan_dir/test.properties`
+jmeter_ns=`awk -F= '/kubermeter_namespace/{ print $2 }' $test_plan_dir/kubermeter.properties`
 
 if [ -z "$jmeter_ns" ] ; then
-  echo "kubermeter_namespace is missing from $test_plan_dir/test.properties"
+  echo "kubermeter_namespace is missing from $test_plan_dir/kubermeter.properties"
   exit 1
 fi
 
