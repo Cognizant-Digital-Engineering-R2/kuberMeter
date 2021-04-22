@@ -63,23 +63,14 @@ parse_params() {
 parse_params "$@"
 test_plan_repo="$1"
 TEMP_REPO='temp_repo'
-CURRENT_TEST_PLAN='current_test_plan'
-
+POD_TEST_PLAN_DIR='current_test_plan'
 JMETER_NAMESPACE_PREFIX=`awk -F= '/JMETER_NAMESPACE_PREFIX/{ print $2 }' ./kubermeter.properties`
 JMETER_SLAVES_SVC=`awk -F= '/JMETER_SLAVES_SVC/{ print $2 }' ./kubermeter.properties`
 JMETER_PODS_PREFIX=`awk -F= '/JMETER_PODS_PREFIX/{ print $2 }' ./kubermeter.properties`
 POD_KUBERMETER_DIR='/tmp/kubermeter'
-POD_TEST_PLAN_DIR='current_test_plan'
 JMX_FILE='test'
 PROPERTIES_FILE='test'
-test_plan_dir="$script_dir/$CURRENT_TEST_PLAN"
-test_plan_dir_basename=`basename $test_plan_dir`
-
-
-rm -rf $script_dir/$TEMP_REPO
-git clone $test_plan_repo $script_dir/$TEMP_REPO
-rm -rf $script_dir/$CURRENT_TEST_PLAN
-mv $script_dir/$TEMP_REPO $script_dir/$CURRENT_TEST_PLAN
+test_plan_dir="$script_dir/$POD_TEST_PLAN_DIR"
 
 
 # Checking yq pacakge availability
@@ -90,12 +81,16 @@ if ! hash yq 2>/dev/null; then
 fi
 
 
-# Assert test_plan_dir exsists on the local machine and does not coincide with POD_TEST_PLAN_DIR, 
-# and that the jmx_file and properties_file are located at its surface level. 
+# Clone the test plan repo
+rm -rf $script_dir/$TEMP_REPO
+git clone $test_plan_repo $script_dir/$TEMP_REPO
+rm -rf $script_dir/$POD_TEST_PLAN_DIR
+mv $script_dir/$TEMP_REPO $script_dir/$POD_TEST_PLAN_DIR
+
+
+# Assert test_plan_dir exsists  and that the jmx_file and properties_file are located at its surface level. 
 if [ ! -d "$test_plan_dir" ]; then
   die "Directory '$test_plan_dir' does not exist! Use -h for help."
-elif [ $test_plan_dir_basename = $POD_TEST_PLAN_DIR ]; then
-  die "Directory name '$test_plan_dir_basename' coincide with the reserved name '$POD_TEST_PLAN_DIR'. Please changed it to another one."
 else
   if [ ! -f "$test_plan_dir/$JMX_FILE.jmx" ]; then
     die "'$JMX_FILE.jmx' does not exist at the surface level of directory '$test_plan_dir'.  Use './`basename ${BASH_SOURCE[0]}` -h' for help"
@@ -191,19 +186,19 @@ echo
 
 # Get master pod details and push test files
 master_pod=`kubectl -n $jmeter_namespace get po | grep jmeter-master | awk '{print $1}'`
-msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename ..."
-kubectl -n $jmeter_namespace exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
-kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
-kubectl -n $jmeter_namespace exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+msg "Pushing test files into jmeter-master pod $master_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR..."
+kubectl -n $jmeter_namespace exec -ti $master_pod -- rm -rf $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
+kubectl -n $jmeter_namespace cp $test_plan_dir $master_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
+kubectl -n $jmeter_namespace exec -ti $master_pod -- cp -TR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
 
 
 # Get slave pods details and push test files
 slave_pods=(`kubectl get po -n $jmeter_namespace | grep jmeter-slave | awk '{print $1}'`)
 for slave_pod in ${slave_pods[@]}; do
-  msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename"
-  kubectl -n $jmeter_namespace exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$test_plan_dir_basename
-  kubectl -n $jmeter_namespace cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$test_plan_dir_basename
-  kubectl -n $jmeter_namespace exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$test_plan_dir_basename $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
+  msg "Pushing test files into jmeter-slave pod $slave_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR..."
+  kubectl -n $jmeter_namespace exec -ti $slave_pod -- rm -rf $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
+  kubectl -n $jmeter_namespace cp $test_plan_dir $slave_pod:$POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR
+  kubectl -n $jmeter_namespace exec -ti $slave_pod -- cp -TR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR $POD_KUBERMETER_DIR/$POD_TEST_PLAN_DIR 
 done
 
 
