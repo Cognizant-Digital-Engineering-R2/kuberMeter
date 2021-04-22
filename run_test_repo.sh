@@ -132,6 +132,28 @@ for jmns in $jm_namespaces; do # check if the new jmeter_namespace already exist
   fi
 done
 
+
+# slave_num=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
+slave_num=`awk -F= '/jmeter_slave_pod_num/{ print $2 }' $test_plan_dir/kubermeter.properties`
+slave_memory=`awk -F= '/jmeter_slave_pod_momory/{ print $2 }' $test_plan_dir/kubermeter.properties`
+slave_cpu=`awk -F= '/jmeter_slave_pod_cpu/{ print $2 }' $test_plan_dir/kubermeter.properties`
+echo "slave_num $slave_num"
+if [ -z "$jmeter_ns" ] ; then
+  echo "number_of_jmeter_slaves is missing from $test_plan_dir/kubermeter.properties"
+  exit 1
+fi
+echo "Creating Jmeter slave pod(s)"
+# yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | kubectl create -n $jmeter_namespace -f -
+yq e ".spec.replicas |= $slave_num" $script_dir/jmeter_slave_dep.yaml | \
+yq e ".spec.template.spec.containers[0].resources.requests.memory |= $slave_memory"  - | \
+yq e ".spec.template.spec.containers[0].resources.requests.cpu |= $slave_cpu"  - | \
+yq e ".spec.template.spec.containers[0].resources.limits.memory |= $slave_memory"  - | \
+yq e ".spec.template.spec.containers[0].resources.limits.cpu |= $slave_cpu"  -
+
+echo
+exit
+
+
 # Create the new name spaces and nodes
 echo "Creating Namespace: $jmeter_namespace"
 kubectl create namespace $jmeter_namespace
@@ -158,7 +180,7 @@ wait_time_max="180"
 start_time=$(date +%s)
 all_conatiners_ready=false
 ip_pat='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
-num_slaves=`yq e ".spec.replicas" ./jmeter_slave_dep.yaml`
+
 
 while [[ "$all_conatiners_ready" = false ]]; do
   
@@ -173,7 +195,7 @@ and/or use 'kubectl delete ns $jmeter_namespace' to start over.\n"
     exit 1
   elif [[ $wait_time_elapsed -ge $wait_time_min ]]; then
     num_pod_ips=`kubectl -n $jmeter_namespace get pods -o wide | grep $JMETER_PODS_PREFIX | awk '{print $6}' | grep -Ec $ip_pat`
-    [[ "$num_pod_ips" -eq $(($num_slaves + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
+    [[ "$num_pod_ips" -eq $(($slave_num + 1)) ]] && all_conatiners_ready=true || all_conatiners_ready=false
     kubectl -n $jmeter_namespace get pods -o wide
   fi
 
